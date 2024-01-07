@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import List
 
 
 def create_expense(
@@ -8,15 +9,15 @@ def create_expense(
     amount: Decimal,
     date: str,
     notes: str = None,
-):
+) -> dict:
     raise NotImplementedError
 
 
-def get_expenses():
+def get_expenses() -> List[dict]:
     raise NotImplementedError
 
 
-def get_expense(uid: str):
+def get_expense(uid: str) -> dict:
     raise NotImplementedError
 
 
@@ -28,9 +29,9 @@ def update_expense(
     amount: Decimal,
     date: str,
     notes: str = None,
-):
+) -> dict:
     raise NotImplementedError
 
 
-def delete_expense(uid: str):
+def delete_expense(uid: str) -> dict:
     raise NotImplementedError

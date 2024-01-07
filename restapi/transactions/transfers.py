@@ -1,36 +1,31 @@
 from decimal import Decimal
+from typing import List
 
 
-def create_allocation(
-    source: str,
-    destination: str,
-    amount: Decimal,
-    currency: str,
-    date: str,
-    notes: str = None,
-):
+def create_transfer(
+    source: str, destination: str, amount: Decimal, date: str, notes: str = None
+) -> dict:
     raise NotImplementedError
 
 
-def get_allocations():
+def get_transfers() -> List[dict]:
     raise NotImplementedError
 
 
-def get_allocation(uid: str):
+def get_transfer(uid: str) -> dict:
     raise NotImplementedError
 
 
-def update_allocation(
+def update_transfer(
     uid: str,
     source: str,
     destination: str,
     amount: Decimal,
-    currency: str,
     date: str,
     notes: str = None,
-):
+) -> dict:
     raise NotImplementedError
 
 
-def delete_allocation(uid: str):
+def delete_transfer(uid: str) -> dict:
     raise NotImplementedError
