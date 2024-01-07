@@ -1,6 +1,10 @@
 from decimal import Decimal
 from typing import List
 
+import pendulum
+
+from budget.facts import Allocation
+
 
 def create_allocation(
     source: str,
@@ -10,7 +14,14 @@ def create_allocation(
     date: str,
     notes: str = None,
 ) -> dict:
-    raise NotImplementedError
+    return Allocation.create(
+        source=source,
+        destination=destination,
+        amount=amount,
+        currency=currency,
+        date=pendulum.from_format(date, fmt="%Y-%m-%d"),
+        notes=notes,
+    ).as_dict
 
 
 def get_allocations() -> List[dict]:

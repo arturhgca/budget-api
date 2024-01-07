@@ -1,5 +1,5 @@
 from flask import Flask
-import transactions
+from restapi import transactions
 
 app = Flask(__name__)
 
