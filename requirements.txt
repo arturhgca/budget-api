@@ -1,0 +1,2 @@
+flask==3
+pendulum==3
