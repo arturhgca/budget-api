@@ -5,11 +5,13 @@ from decimal import Decimal
 from typing import List
 from uuid import uuid4
 
+from beancount.core.amount import Amount
+from beancount.core.data import Posting, Transaction
 from pendulum import Date
 
 from budget.beancountwrapper import Ledger
 
-logical_ledger = Ledger(path="../../beancount-ledger/budget/logical.beancount")
+logical_ledger = Ledger(path="../beancount-ledger/budget/logical.beancount")
 
 
 class Fact(ABC):
@@ -30,32 +32,40 @@ class Fact(ABC):
 
     @abstractmethod
     def update(self, *args, **kwargs) -> None:
-        return NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def delete(self) -> None:
-        return NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
-    @property
     def as_dict(self) -> dict:
         return NotImplemented
 
     @abstractmethod
     def commit(self) -> None:
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_beancount(cls, item: Transaction) -> Fact:
+        return NotImplemented
+
+    @abstractmethod
+    def to_beancount(self) -> Transaction:
         return NotImplemented
 
 
 class Allocation(Fact):
     def __init__(
-        self,
-        source: str,
-        destination: str,
-        amount: Decimal,
-        currency: str,
-        date: Date,
-        uid: str,
-        notes: str = None,
+            self,
+            source: str,
+            destination: str,
+            amount: Decimal,
+            currency: str,
+            date: Date,
+            uid: str,
+            notes: str = None,
     ):
         self.source = source
         self.destination = destination
@@ -67,13 +77,13 @@ class Allocation(Fact):
 
     @classmethod
     def create(
-        cls,
-        source: str,
-        destination: str,
-        amount: Decimal,
-        currency: str,
-        date: Date,
-        notes: str = None,
+            cls,
+            source: str,
+            destination: str,
+            amount: Decimal,
+            currency: str,
+            date: Date,
+            notes: str = None,
     ) -> Allocation:
         item = cls(
             source=source,
@@ -89,26 +99,83 @@ class Allocation(Fact):
 
     @classmethod
     def get_all(cls) -> List[Allocation]:
-        pass
+        return [
+            Allocation.from_beancount(item)
+            for item in logical_ledger.transactions
+            if item.meta["type"] == 'allocation'
+        ]
 
     @classmethod
     def get(cls, uid: str) -> Allocation:
-        pass
+        return Allocation.from_beancount(logical_ledger.get(uid))
 
-    def update(self, *args, **kwargs) -> None:
-        pass
+    def update(self,
+               source: str,
+               destination: str,
+               amount: Decimal,
+               currency: str,
+               date: Date,
+               uid: str,
+               notes: str = None,
+               ) -> None:
+        self.source = source
+        self.destination = destination
+        self.amount = amount
+        self.currency = currency
+        self.date = date
+        self.uid = uid
+        self.notes = notes
+        self.commit()
 
     def delete(self) -> None:
         pass
 
-    @property
     def as_dict(self) -> dict:
         return vars(self)
 
-    def commit(self) -> str:
-        return (
-            f"{self.date.to_date_string()} *"
-            f"  uid: {self.uid}"
-            f"  {self.destination} {self.amount} {self.currency}"
-            f"  {self.source} -{self.amount} {self.currency}"
+    def commit(self):
+        self_beancount = self.to_beancount()
+        logical_ledger.entries[self.uid] = self_beancount
+        logical_ledger.transactions[self.uid] = self_beancount
+        logical_ledger.commit()
+
+    @classmethod
+    def from_beancount(cls, item: Transaction) -> Allocation:
+        source_posting = next((i for i in item.postings if i.units.number < 0))
+        destination_posting = next((i for i in item.postings if i.units.number > 0))
+        return Allocation(
+            source=source_posting.account,
+            destination=destination_posting.account,
+            amount=destination_posting.units.number,
+            currency=destination_posting.units.currency,
+            date=item.date,
+            uid=item.meta["uid"],
+            notes=item.narration,
+        )
+
+    def to_beancount(self) -> Transaction:
+        return Transaction(
+            meta={
+                "uid": self.uid,
+                "type": "allocation",
+            },
+            date=self.date,
+            flag="*",
+            narration=self.notes,
+            postings=[
+                Posting(
+                    account=self.source,
+                    units=Amount(
+                        number=-self.amount,
+                        currency=self.currency,
+                    )
+                ),
+                Posting(
+                    account=self.destination,
+                    units=Amount(
+                        number=self.amount,
+                        currency=self.currency,
+                    )
+                ),
+            ]
         )
