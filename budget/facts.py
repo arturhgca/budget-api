@@ -1,69 +1,24 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+import datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Optional, Tuple
 from uuid import uuid4
 
 from beancount.core.amount import Amount
-from beancount.core.data import Posting, Transaction
-from pendulum import Date
+from beancount.core.data import Transaction, Posting
 
-from budget.ledger import Ledger
-
-logical_ledger = Ledger(path="beancountfiles/logical.beancount")
+from budget.data import Item, logical_ledger, physical_ledger
 
 
-class Fact(ABC):
-    @classmethod
-    @abstractmethod
-    def create(cls, *args, **kwargs) -> Fact:
-        return NotImplemented
-
-    @classmethod
-    @abstractmethod
-    def get_all(cls) -> List[Fact]:
-        return NotImplemented
-
-    @classmethod
-    @abstractmethod
-    def get(cls, uid: str) -> Fact:
-        return NotImplemented
-
-    @abstractmethod
-    def update(self, *args, **kwargs) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def delete(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def as_dict(self) -> dict:
-        return NotImplemented
-
-    @abstractmethod
-    def commit(self) -> None:
-        raise NotImplementedError
-
-    @classmethod
-    @abstractmethod
-    def from_beancount(cls, item: Transaction) -> Fact:
-        return NotImplemented
-
-    @abstractmethod
-    def to_beancount(self) -> Transaction:
-        return NotImplemented
-
-
-class Allocation(Fact):
+class Allocation(Item):
     def __init__(
             self,
             source: str,
             destination: str,
             amount: Decimal,
             currency: str,
-            date: Date,
+            date: datetime.date,
             uid: str,
             notes: str = None,
     ):
@@ -82,7 +37,7 @@ class Allocation(Fact):
             destination: str,
             amount: Decimal,
             currency: str,
-            date: Date,
+            date: datetime.date,
             notes: str = None,
     ) -> Allocation:
         item = cls(
@@ -101,7 +56,7 @@ class Allocation(Fact):
     def get_all(cls) -> List[Allocation]:
         return [
             Allocation.from_beancount(item)
-            for item in logical_ledger.transactions.values()
+            for item in logical_ledger.values()
             if item.meta["type"] == 'allocation'
         ]
 
@@ -114,7 +69,7 @@ class Allocation(Fact):
                destination: str,
                amount: Decimal,
                currency: str,
-               date: Date,
+               date: datetime.date,
                uid: str,
                notes: str = None,
                ) -> None:
@@ -130,13 +85,9 @@ class Allocation(Fact):
     def delete(self) -> None:
         pass
 
-    def as_dict(self) -> dict:
-        return vars(self)
-
     def commit(self):
         self_beancount = self.to_beancount()
-        logical_ledger.entries[self.uid] = self_beancount
-        logical_ledger.transactions[self.uid] = self_beancount
+        logical_ledger[self.uid] = self_beancount
         logical_ledger.commit()
 
     @classmethod
