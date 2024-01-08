@@ -1,25 +1,24 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import List
-
-import pendulum
 
 from budget.facts import Allocation
 
 
 def create_allocation(
-    source: str,
-    destination: str,
-    amount: Decimal,
-    currency: str,
-    date: str,
-    notes: str = None,
+        source: str,
+        destination: str,
+        amount: Decimal,
+        currency: str,
+        date: str,
+        notes: str = None,
 ) -> dict:
     return Allocation.create(
         source=source,
         destination=destination,
         amount=amount,
         currency=currency,
-        date=pendulum.from_format(date, fmt="%Y-%m-%d"),
+        date=datetime.strptime(date, "%Y-%m-%d"),
         notes=notes,
     ).as_dict()
 
@@ -36,13 +35,13 @@ def get_allocation(uid: str) -> dict:
 
 
 def update_allocation(
-    uid: str,
-    source: str,
-    destination: str,
-    amount: Decimal,
-    currency: str,
-    date: str,
-    notes: str = None,
+        uid: str,
+        source: str,
+        destination: str,
+        amount: Decimal,
+        currency: str,
+        date: str,
+        notes: str = None,
 ) -> dict:
     allocation = Allocation.get(uid=uid)
     allocation.update(
@@ -50,7 +49,7 @@ def update_allocation(
         destination=destination,
         amount=amount,
         currency=currency,
-        date=pendulum.from_format(date, fmt="%Y-%m-%d"),
+        date=datetime.strptime(date, "%Y-%m-%d"),
         notes=notes,
     )
     return allocation.as_dict()
