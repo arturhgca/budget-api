@@ -47,7 +47,7 @@ class Ledger:
 
     def commit(self):
         contents = StringIO()
-        contents.writelines([f"{item}\n\n" for item in self.entries.values()])
+        contents.writelines([f"{item}\n\n" for item in sorted(self.entries.values(), key=lambda x: x.date)])
         formatted = align_beancount(contents.getvalue())
-        with open(f"{self.path}2", "w", encoding='UTF-8') as f:
+        with open(f"{self.path}", "w", encoding='UTF-8') as f:
             f.write(formatted)
