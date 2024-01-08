@@ -21,15 +21,18 @@ def create_allocation(
         currency=currency,
         date=pendulum.from_format(date, fmt="%Y-%m-%d"),
         notes=notes,
-    ).as_dict
+    ).as_dict()
 
 
 def get_allocations() -> List[dict]:
-    raise NotImplementedError
+    return [
+        item.as_dict()
+        for item in Allocation.get_all()
+    ]
 
 
 def get_allocation(uid: str) -> dict:
-    raise NotImplementedError
+    return Allocation.get(uid=uid).as_dict()
 
 
 def update_allocation(
@@ -41,8 +44,20 @@ def update_allocation(
     date: str,
     notes: str = None,
 ) -> dict:
-    raise NotImplementedError
+    allocation = Allocation.get(uid=uid)
+    allocation.update(
+        source=source,
+        destination=destination,
+        amount=amount,
+        currency=currency,
+        date=pendulum.from_format(date, fmt="%Y-%m-%d"),
+        notes=notes,
+    )
+    return allocation.as_dict()
 
 
 def delete_allocation(uid: str) -> dict:
-    raise NotImplementedError
+    allocation = Allocation.get(uid=uid)
+    contents = allocation.as_dict()
+    allocation.delete()
+    return contents
