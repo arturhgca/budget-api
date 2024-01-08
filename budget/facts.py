@@ -9,7 +9,7 @@ from beancount.core.amount import Amount
 from beancount.core.data import Posting, Transaction
 from pendulum import Date
 
-from budget.beancountwrapper import Ledger
+from budget.ledger import Ledger
 
 logical_ledger = Ledger(path="beancountfiles/logical.beancount")
 
@@ -101,7 +101,7 @@ class Allocation(Fact):
     def get_all(cls) -> List[Allocation]:
         return [
             Allocation.from_beancount(item)
-            for item in logical_ledger.transactions
+            for item in logical_ledger.transactions.values()
             if item.meta["type"] == 'allocation'
         ]
 
