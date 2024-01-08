@@ -1,3 +1,2 @@
 beancount>=2,<3
 flask>=3,<4
-pendulum>=3,<4
