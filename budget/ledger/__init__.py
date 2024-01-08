@@ -1,5 +1,5 @@
+from collections import UserDict
 from io import StringIO
-from typing import Dict, Any
 
 from beancount.core.data import Transaction, Open, Commodity
 from beancount.loader import load_file
@@ -8,15 +8,11 @@ from beancount.scripts.format import align_beancount
 from . import monkeypatch
 
 
-class Ledger:
+class Ledger(UserDict):
     def __init__(self, path: str):
         super().__init__()
         self.path = path
         self.options_map = None
-        self.entries: Dict[str, Any] = dict()
-        self.transactions: Dict[str, Transaction] = dict()
-        self.accounts: Dict[str, Open] = dict()
-        self.commodities: Dict[str, Commodity] = dict()
         self._load()
 
     def _load(self):
@@ -26,28 +22,26 @@ class Ledger:
             if 'uid' in entry.meta
                and "type" in entry.meta
         }
-        self.transactions = {
+        transactions = {
             uid: entry for uid, entry in entries.items()
             if isinstance(entry, Transaction)
         }
-        self.accounts = {
+        accounts = {
             uid: entry for uid, entry in entries.items()
             if isinstance(entry, Open)
         }
-        self.commodities = {
+        commodities = {
             uid: entry for uid, entry in entries.items()
             if isinstance(entry, Commodity)
         }
-        self.entries.update(self.transactions)
-        self.entries.update(self.accounts)
-        self.entries.update(self.commodities)
-
-    def get(self, uid: str) -> Any:
-        return self.entries[uid]
+        self.update(transactions)
+        self.update(accounts)
+        self.update(commodities)
+        self.commit()
 
     def commit(self):
         contents = StringIO()
-        contents.writelines([f"{item}\n\n" for item in sorted(self.entries.values(), key=lambda x: x.date)])
+        contents.writelines([f"{item}\n\n" for item in sorted(self.values(), key=lambda x: x.date)])
         formatted = align_beancount(contents.getvalue())
         with open(f"{self.path}", "w", encoding='UTF-8') as f:
             f.write(formatted)
