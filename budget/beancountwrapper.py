@@ -12,9 +12,9 @@ def monkeypatch_transaction_str(self) -> str:
         for posting in self.postings
     ])
     return (
-        f"{self.date.strftime('%Y-%m-%d')} * {self.narration}"
-        f"\n  type: {self.meta['type']}"
-        f"\n  uid: {self.meta['uid']}"
+        f"{self.date.strftime('%Y-%m-%d')} * \"{self.narration}\""
+        f"\n  type: \"{self.meta['type']}\""
+        f"\n  uid: \"{self.meta['uid']}\""
         f"\n{postings}"
         f"\n"
     )
@@ -65,4 +65,5 @@ class Ledger:
         contents = StringIO()
         contents.writelines([f"{item}\n" for item in self.entries.values()])
         formatted = align_beancount(contents.getvalue())
-        print(formatted)
+        with open(f"{self.path}", "w", encoding='UTF-8') as f:
+            f.write(formatted)

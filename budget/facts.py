@@ -11,7 +11,7 @@ from pendulum import Date
 
 from budget.beancountwrapper import Ledger
 
-logical_ledger = Ledger(path="../beancount-ledger/budget/logical.beancount")
+logical_ledger = Ledger(path="beancountfiles/logical.beancount")
 
 
 class Fact(ABC):
